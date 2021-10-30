@@ -1,45 +1,45 @@
 version: '2'
 services:
 
-  app:
-    tty: true
-    image: ethanabrace/php:8.0-fpm
-    user: 1000:1000
-    depends_on:
-      - mariadb
-    volumes:
-      - ./:/var/www/html
+    octane:
+        image: ethanabrace/php:8.0-fpm
+        user: 1000:1000
+        volumes:
+            - ./:/var/www/html
+        entrypoint: /var/www/html/artisan
+        command: 'octane:start --host=0.0.0.0'
 
-  web:
-    image: ethanabrace/nginx
-    user: 1000:1000
-    environment:
-      PROXY_PASS: app
-      PROXY_PASS_PORT: 9000
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.api-proxy.rule=Host(`${DOMAIN_NAME}`)"
-      - "traefik.docker.network=traefik"
-      - "traefik.backend=${DOMAIN_NAME}"
-      - "traefik.frontend.rule=Host:${DOMAIN_NAME}"
-    volumes:
-      - .:/var/www/html
-      - ./nginx.conf:/etc/nginx/templates/default.conf.template
-    networks:
-      - traefik
-      - default
 
-  mariadb:
-    image: docker.io/bitnami/mariadb:10.6
-    networks:
-      - default
-      - traefik
-    environment:
-      - MARIADB_ROOT_PASSWORD=${DB_PASSWORD}
-      - MARIADB_USER=${DB_USERNAME}
-      - MARIADB_DATABASE=${DB_DATABASE}
-      - MARIADB_PASSWORD=${DB_PASSWORD}
+    web:
+        image: ethanabrace/nginx
+        user: 1000:1000
+        environment:
+            FORWARD_TO: octane
+            FORWARD_TO_PORT: 8000
+        networks:
+            - default
+            - traefik
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.api-proxy.rule=Host(`${DOMAIN_NAME}`)"
+            - "traefik.docker.network=traefik"
+            - "traefik.backend=${DOMAIN_NAME}"
+            - "traefik.frontend.rule=Host:${DOMAIN_NAME}"
+        volumes:
+            - .:/var/www/html
+            - ./nginx.conf:/etc/nginx/templates/default.conf.template
+
+    mariadb:
+        image: docker.io/bitnami/mariadb:10.6
+        networks:
+            - default
+            - traefik
+        environment:
+            - MARIADB_ROOT_PASSWORD=${DB_PASSWORD}
+            - MARIADB_USER=${DB_USERNAME}
+            - MARIADB_DATABASE=${DB_DATABASE}
+            - MARIADB_PASSWORD=${DB_PASSWORD}
 
 networks:
-  traefik:
-    external: true
+    traefik:
+        external: true
