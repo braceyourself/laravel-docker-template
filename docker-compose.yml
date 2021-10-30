@@ -7,7 +7,7 @@ services:
         volumes:
             - ./:/var/www/html
         entrypoint: /var/www/html/artisan
-        command: 'octane:start --host=0.0.0.0'
+        command: 'octane:start --host=0.0.0.0 --watch --workers=1 --task-workers=1'
 
 
     web:
